@@ -4,6 +4,9 @@ Ten dodatek do Blendera 5.0 (i nowszych) dodaje szybką wyszukiwarkę kart paska
 
 ![screenshot](image.jpg)
 
+<center>
+</center>
+
 ## Funkcje
 
 - **Ikonka w Nagłówku**: Mała ikonka lupy w nagłówku widoku 3D (obok opcji wyświetlania).
