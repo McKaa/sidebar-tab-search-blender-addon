@@ -2,6 +2,8 @@
 
 Ten dodatek do Blendera 5.0 (i nowszych) dodaje szybką wyszukiwarkę kart paska bocznego (N-Panel), umieszczoną wygodnie w nagłówku widoku 3D.
 
+![screenshot](image.jpg)
+
 ## Funkcje
 
 - **Ikonka w Nagłówku**: Mała ikonka lupy w nagłówku widoku 3D (obok opcji wyświetlania).
