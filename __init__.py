@@ -7,7 +7,7 @@ bl_info = {
     "description": "Szybkie wyszukiwanie i przełączanie między kartami paska bocznego (N-Panel). / Quick search and switch between Sidebar (N-Panel) tabs.",
     "warning": "",
     "doc_url": "",
-    "tracker_url": "",
+    "tracker_url": "https://github.com/McKaa/sidebar-tab-search-blender-addon",
     "support": "COMMUNITY",
     "category": "Interface",
     # Note: 'license' field is not standard in bl_info dictionary itself for display in list, 
