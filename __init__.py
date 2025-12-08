@@ -4,7 +4,7 @@ bl_info = {
     "version": (1, 0),
     "blender": (5, 0, 0),
     "location": "View3D > Header",
-    "description": "Szybkie wyszukiwanie i przełączanie między kartami paska bocznego (N-Panel). / Quick search and switch between Sidebar (N-Panel) tabs.",
+    "description": "Quick search and switch between Sidebar (N-Panel) tabs.",
     "warning": "",
     "doc_url": "",
     "tracker_url": "https://github.com/McKaa/sidebar-tab-search-blender-addon",
@@ -17,32 +17,32 @@ bl_info = {
 
 import bpy
 
-# Grupa właściwości przechowująca zapytanie wyszukiwania
+# Property group storing the search query
 class SEARCHTABS_PG_properties(bpy.types.PropertyGroup):
     search_query: bpy.props.StringProperty(
-        name="Wyszukaj kartę",
-        description="Wpisz, aby wyszukać kartę paska bocznego",
+        name="Search Tab",
+        description="Type to search sidebar tabs",
         default="",
-        options={'TEXTEDIT_UPDATE'}  # Aktualizuj przy każdym naciśnięciu klawisza lub po zatwierdzeniu
+        options={'TEXTEDIT_UPDATE'}  # Update on every keystroke or after confirmation
     )
 
-# Operator do przełączania kategorii paska bocznego
+# Operator to switch sidebar category
 class SEARCHTABS_OT_switch_tab(bpy.types.Operator):
-    """Przełącz na wybraną kartę paska bocznego"""
+    """Switch to selected sidebar tab"""
     bl_idname = "searchtabs.switch_tab"
-    bl_label = "Przełącz kartę"
+    bl_label = "Switch Tab"
     
     category_name: bpy.props.StringProperty()
     target_panel_label: bpy.props.StringProperty(default="")
 
     def execute(self, context):
-        # 1. Upewnij się, że pasek boczny jest widoczny
+        # 1. Make sure the sidebar is visible
         if context.space_data and context.space_data.type == 'VIEW_3D':
-            # Jeśli pasek jest ukryty, pokaż go
+            # If the sidebar is hidden, show it
             if not context.space_data.show_region_ui:
                 context.space_data.show_region_ui = True
 
-        # 2. Próba znalezienia regionu 'UI' (Sidebar) w aktywnym obszarze
+        # 2. Try to find the 'UI' region (Sidebar) in the active area
         sidebar_region = None
         for region in context.area.regions:
             if region.type == 'UI':
@@ -51,26 +51,26 @@ class SEARCHTABS_OT_switch_tab(bpy.types.Operator):
         
         if sidebar_region:
             try:
-                # W Blenderze 4.0+ (i 5.0) używamy active_panel_category na regionie
-                # Musimy to robić z try-except, bo czasem API zgłasza błąd read-only
-                # jeśli region dopiero się otwiera.
+                # In Blender 4.0+ (and 5.0) we use active_panel_category on the region
+                # We need to do this with try-except, because sometimes the API raises a read-only error
+                # if the region is just opening.
                 try:
                     sidebar_region.active_panel_category = self.category_name
                 except TypeError:
-                    # Fallback: czasem pomaga odświeżenie przed ustawieniem
+                    # Fallback: sometimes refreshing before setting helps
                     pass
                 except AttributeError:
-                     # Starsze wersje / specyficzne błędy
+                     # Older versions / specific errors
                     pass
 
-                # Ponowna próba (często potrzebna przy pierwszym otwarciu paska)
+                # Retry (often needed on first sidebar opening)
                 if sidebar_region.active_panel_category != self.category_name:
                      sidebar_region.active_panel_category = self.category_name
                 
-                # Wymuś odświeżenie regionu
+                # Force region refresh
                 sidebar_region.tag_redraw()
                 
-                # Próba przewinięcia widoku na górę
+                # Try to scroll the view to the top
                 with context.temp_override(area=context.area, region=sidebar_region):
                     try:
                         bpy.ops.view2d.scroll_up(deltas=100)
@@ -79,39 +79,39 @@ class SEARCHTABS_OT_switch_tab(bpy.types.Operator):
 
                 return {'FINISHED'}
             except Exception as e:
-                # Jeśli nadal jest błąd, zgłoś go, ale nie crashuj
-                self.report({'WARNING'}, f"Ostrzeżenie: {e}")
-                return {'FINISHED'} # Zwracamy finished, aby nie blokować UI
+                # If there's still an error, report it but don't crash
+                self.report({'WARNING'}, f"Warning: {e}")
+                return {'FINISHED'} # Return finished to not block the UI
         else:
-            self.report({'WARNING'}, "Nie znaleziono paska bocznego (Sidebar).")
+            self.report({'WARNING'}, "Sidebar not found.")
             return {'CANCELLED'}
 
-# Panel Popover (wyskakujące okienko)
+# Popover Panel (popup window)
 class SEARCHTABS_PT_popover(bpy.types.Panel):
-    """Tworzy wyskakujący panel wyszukiwania"""
-    bl_label = "Szukaj Kart"
+    """Creates a search popover panel"""
+    bl_label = "Search Tabs"
     bl_idname = "SEARCHTABS_PT_popover"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'HEADER'
-    bl_ui_units_x = 14 # Nieco szersze okno dla długich nazw
+    bl_ui_units_x = 14 # Slightly wider window for long names
 
     def draw(self, context):
         layout = self.layout
         props = context.scene.searchtabs_props
 
-        # Pole wejściowe
+        # Input field
         row = layout.row(align=True)
         row.prop(props, "search_query", text="", icon='VIEWZOOM')
 
         query = props.search_query.lower()
 
-        # Zbieranie danych: Kategoria -> Lista Paneli (Etykiet)
-        # Struktur: entries = [ {'search_text': "Auto Mirror", 'display': "Auto Mirror (Edit)", 'cat': "Edit"}, ... ]
+        # Collecting data: Category -> List of Panels (Labels)
+        # Structure: entries = [ {'search_text': "Auto Mirror", 'display': "Auto Mirror (Edit)", 'cat': "Edit"}, ... ]
         
         entries = []
         seen_categories = set()
         
-        # 1. Najpierw iterujemy, aby zebrać unikalne panele z etykietami
+        # 1. First iterate to collect unique panels with labels
         for panel in bpy.types.Panel.__subclasses__():
             if (hasattr(panel, 'bl_space_type') and panel.bl_space_type == 'VIEW_3D' and
                 hasattr(panel, 'bl_region_type') and panel.bl_region_type == 'UI' and
@@ -122,7 +122,7 @@ class SEARCHTABS_PT_popover(bpy.types.Panel):
 
                 label = getattr(panel, 'bl_label', "")
                 
-                # Dodaj samą kategorię jako bazowy wynik (tylko raz)
+                # Add the category itself as a base result (only once)
                 if cat not in seen_categories:
                     entries.append({
                         'search_text': cat.lower(),
@@ -132,19 +132,19 @@ class SEARCHTABS_PT_popover(bpy.types.Panel):
                     })
                     seen_categories.add(cat)
                 
-                # Dodaj panel (podkategorię) jeśli ma etykietę inną niż kategoria
+                # Add panel (subcategory) if it has a label different from the category
                 if label and label != cat:
                     entries.append({
-                        'search_text': f"{label} {cat}".lower(), # Pozwala szukać po obu
+                        'search_text': f"{label} {cat}".lower(), # Allows searching by both
                         'display': f"{label} ({cat})",
                         'cat': cat,
                         'is_main': False
                     })
 
-        # Sortowanie alfabetyczne
+        # Alphabetical sorting
         entries.sort(key=lambda x: x['display'])
 
-        # Wyświetlanie
+        # Display
         col = layout.column(align=True)
         
         found_count = 0
@@ -152,7 +152,7 @@ class SEARCHTABS_PT_popover(bpy.types.Panel):
             for entry in entries:
                 if query in entry['search_text']:
                     found_count += 1
-                    # Limit wyników, żeby nie muliło przy krótkim query
+                    # Limit results to avoid clutter with short queries
                     if found_count > 20:
                         break
                     
@@ -161,21 +161,21 @@ class SEARCHTABS_PT_popover(bpy.types.Panel):
                     op.category_name = entry['cat']
             
             if found_count == 0:
-                col.label(text="Brak wyników")
+                col.label(text="No results")
         else:
-            col.label(text="Wpisz, aby szukać...")
-            # Pokaż tylko główne kategorie gdy pusto
+            col.label(text="Type to search...")
+            # Show only main categories when empty
             main_cats = sorted([e for e in entries if e['is_main']], key=lambda x: x['display'])
             for entry in main_cats:
                 op = col.operator("searchtabs.switch_tab", text=entry['display'], icon='NODE')
                 op.category_name = entry['cat']
 
-# Funkcja rysująca ikonkę w nagłówku
+# Function to draw the icon in the header
 def draw_header_icon(self, context):
     layout = self.layout
     layout.popover(panel="SEARCHTABS_PT_popover", text="", icon='VIEWZOOM')
 
-# Rejestracja
+# Registration
 classes = (
     SEARCHTABS_PG_properties,
     SEARCHTABS_OT_switch_tab,
@@ -188,8 +188,8 @@ def register():
     
     bpy.types.Scene.searchtabs_props = bpy.props.PointerProperty(type=SEARCHTABS_PG_properties)
     
-    # Dodaj do nagłówka widoku 3D
-    # Najpierw spróbuj usunąć, aby uniknąć duplikatów przy przeładowaniu w tej samej sesji
+    # Add to 3D view header
+    # First try to remove to avoid duplicates when reloading in the same session
     try:
         bpy.types.VIEW3D_HT_header.remove(draw_header_icon)
     except ValueError:
@@ -197,7 +197,7 @@ def register():
     bpy.types.VIEW3D_HT_header.append(draw_header_icon)
 
 def unregister():
-    # Usuń z nagłówka
+    # Remove from header
     try:
         bpy.types.VIEW3D_HT_header.remove(draw_header_icon)
     except ValueError:

@@ -1,12 +1,8 @@
 # Sidebar Tab Search (Blender Add-on)
 
-Ten dodatek do Blendera 5.0 (i nowszych) dodaje szybką wyszukiwarkę kart paska bocznego (N-Panel), umieszczoną wygodnie w nagłówku widoku 3D.
+This add-on for Blender 5.0 (and newer) adds a quick search for Sidebar (N-Panel) tabs, conveniently located in the 3D Viewport header.
 
 ![screenshot](image.jpg)
-
----
-
-This add-on for Blender 5.0 (and newer) adds a quick search for Sidebar (N-Panel) tabs, conveniently located in the 3D Viewport header.
 
 ## Features
 
@@ -35,9 +31,9 @@ This add-on for Blender 5.0 (and newer) adds a quick search for Sidebar (N-Panel
 
 ---
 
-# Wersja Polska
+## Wersja Polska (Polish Version)
 
-## Funkcje
+### Funkcje
 
 - **Ikonka w Nagłówku**: Mała ikonka lupy w nagłówku widoku 3D (obok opcji wyświetlania).
 - **Wyszukiwanie**: Szybkie znajdowanie zakładek po nazwie.
@@ -46,7 +42,7 @@ This add-on for Blender 5.0 (and newer) adds a quick search for Sidebar (N-Panel
   - Automatycznie otwiera pasek boczny, jeśli jest ukryty.
   - Przewija widok do początku znalezionej karty/panelu.
   
-## Instalacja
+### Instalacja
 
 1. Pobierz plik `search_sidebar_tabs.zip`.
 2. Otwórz Blender.
@@ -55,7 +51,7 @@ This add-on for Blender 5.0 (and newer) adds a quick search for Sidebar (N-Panel
 5. Wybierz pobrany plik `.zip`.
 6. Zaznacz pole przy nowym dodatku na liście, aby go aktywować (kategoria **Interface**).
 
-## Użycie
+### Użycie
 
 1. W widoku 3D spójrz na nagłówek (górna belka).
 2. Kliknij ikonkę lupy.
