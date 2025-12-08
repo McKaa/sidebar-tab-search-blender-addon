@@ -67,30 +67,39 @@ class SEARCHTABS_OT_switch_tab(bpy.types.Operator):
                                 # If poll fails, skip this panel
                                 continue
                         
+                        # Check options for hidden headers
+                        if hasattr(panel, 'bl_options'):
+                           if 'HIDE_HEADER' in panel.bl_options:
+                               continue
+
                         cat = panel.bl_category
                         if cat not in available_categories:
                             available_categories.append(cat)
                 
                 # Check if requested category is available
                 if self.category_name not in available_categories:
-                    self.report({'WARNING'}, f"Category '{self.category_name}' is not available in current context")
+                    self.report({'INFO'}, f"Tab '{self.category_name}' currently hidden")
                     return {'CANCELLED'}
                 
-                # In Blender 4.0+ (and 5.0) we use active_panel_category on the region
-                # We need to do this with try-except, because sometimes the API raises a read-only error
-                # if the region is just opening.
+                # Try to switch to the category
                 try:
                     sidebar_region.active_panel_category = self.category_name
-                except TypeError:
-                    # Fallback: sometimes refreshing before setting helps
-                    pass
-                except AttributeError:
-                     # Older versions / specific errors
-                    pass
+                except Exception as e:
+                    # Catch the "enum not found" error specifically which happens when
+                    # a category exists in theory (registered) but is hidden in practice.
+                    error_str = str(e)
+                    if "not found in" in error_str:
+                        self.report({'INFO'}, f"Tab '{self.category_name}' is empty or unavailable")
+                        return {'CANCELLED'}
+                    else:
+                        raise e # Re-raise other unexpected errors
 
                 # Retry (often needed on first sidebar opening)
                 if sidebar_region.active_panel_category != self.category_name:
-                     sidebar_region.active_panel_category = self.category_name
+                     try:
+                        sidebar_region.active_panel_category = self.category_name
+                     except Exception:
+                         pass
                 
                 # Force region refresh
                 sidebar_region.tag_redraw()
@@ -98,6 +107,7 @@ class SEARCHTABS_OT_switch_tab(bpy.types.Operator):
                 # Try to scroll the view to the top
                 with context.temp_override(area=context.area, region=sidebar_region):
                     try:
+                        # Reset scroll to top
                         bpy.ops.view2d.scroll_up(deltas=100)
                     except Exception:
                         pass 
@@ -151,6 +161,11 @@ class SEARCHTABS_PT_popover(bpy.types.Panel):
                         # If poll fails, skip this panel
                         continue
                 
+                # Check options for hidden headers (often used for technical panels)
+                if hasattr(panel, 'bl_options'):
+                   if 'HIDE_HEADER' in panel.bl_options:
+                       continue
+
                 cat = panel.bl_category
                 if cat == " Search": continue
 
