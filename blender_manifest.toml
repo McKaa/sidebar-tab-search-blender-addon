@@ -32,7 +32,7 @@ website = "https://github.com/McKaa/sidebar-tab-search-blender-addon"
 
 # Optional: tag list defined by Blender and server
 # https://docs.blender.org/manual/en/dev/advanced/extensions/tags.html
-tags = ["Interface", "User Interface"]
+tags = ["3D View", "User Interface"]
 
 # Optional: list of supported platforms
 # If omitted, the extension will be available in all operating systems
