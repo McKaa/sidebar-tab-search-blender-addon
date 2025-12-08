@@ -51,6 +51,31 @@ class SEARCHTABS_OT_switch_tab(bpy.types.Operator):
         
         if sidebar_region:
             try:
+                # Get list of available categories in current context
+                available_categories = []
+                for panel in bpy.types.Panel.__subclasses__():
+                    if (hasattr(panel, 'bl_space_type') and panel.bl_space_type == 'VIEW_3D' and
+                        hasattr(panel, 'bl_region_type') and panel.bl_region_type == 'UI' and
+                        hasattr(panel, 'bl_category')):
+                        
+                        # Check if panel is available in current context
+                        if hasattr(panel, 'poll'):
+                            try:
+                                if not panel.poll(context):
+                                    continue
+                            except Exception:
+                                # If poll fails, skip this panel
+                                continue
+                        
+                        cat = panel.bl_category
+                        if cat not in available_categories:
+                            available_categories.append(cat)
+                
+                # Check if requested category is available
+                if self.category_name not in available_categories:
+                    self.report({'WARNING'}, f"Category '{self.category_name}' is not available in current context")
+                    return {'CANCELLED'}
+                
                 # In Blender 4.0+ (and 5.0) we use active_panel_category on the region
                 # We need to do this with try-except, because sometimes the API raises a read-only error
                 # if the region is just opening.
@@ -111,11 +136,20 @@ class SEARCHTABS_PT_popover(bpy.types.Panel):
         entries = []
         seen_categories = set()
         
-        # 1. First iterate to collect unique panels with labels
+        # 1. First iterate to collect unique panels with labels (only those available in current context)
         for panel in bpy.types.Panel.__subclasses__():
             if (hasattr(panel, 'bl_space_type') and panel.bl_space_type == 'VIEW_3D' and
                 hasattr(panel, 'bl_region_type') and panel.bl_region_type == 'UI' and
                 hasattr(panel, 'bl_category')):
+                
+                # Check if panel is available in current context
+                if hasattr(panel, 'poll'):
+                    try:
+                        if not panel.poll(context):
+                            continue  # Skip panels not available in current context
+                    except Exception:
+                        # If poll fails, skip this panel
+                        continue
                 
                 cat = panel.bl_category
                 if cat == " Search": continue
