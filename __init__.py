@@ -1,3 +1,19 @@
+# Sidebar Tab Search - Blender Add-on
+# Copyright (C) 2025 McKaa
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 bl_info = {
     "name": "Sidebar Tab Search",
     "author": "McKaa (Powered by Antigravity)",
@@ -10,9 +26,6 @@ bl_info = {
     "tracker_url": "https://github.com/McKaa/sidebar-tab-search-blender-addon",
     "support": "COMMUNITY",
     "category": "Interface",
-    # Note: 'license' field is not standard in bl_info dictionary itself for display in list, 
-    # but often added as comments or doc strings unless using specific repo requirements.
-    # However, we can add it here if it's for internal clarity, though Blender executes it.
 }
 
 import bpy
