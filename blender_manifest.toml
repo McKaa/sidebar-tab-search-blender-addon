@@ -72,4 +72,6 @@ paths_exclude_pattern = [
   "CONTEXT_FILTERING_FIX.md",
   ".gitignore",
   "image.jpg",
+  "sidebar-tab-search_ico_256px.png",
+  "sidebar-tab-search_ico_512px.jpg",
 ]
