@@ -71,4 +71,5 @@ paths_exclude_pattern = [
   "AI_AGENT_GUIDE.md",
   "CONTEXT_FILTERING_FIX.md",
   ".gitignore",
+  "image.jpg",
 ]

@@ -209,13 +209,20 @@ class SEARCHTABS_PT_popover(bpy.types.Panel):
         # Display
         col = layout.column(align=True)
         
+        # Get limit from preferences
+        limit = 25
+        try:
+            limit = context.preferences.addons[__name__].preferences.max_search_results
+        except (KeyError, AttributeError):
+            pass
+
         found_count = 0
-        if query:
+        if len(query) >= 2:
             for entry in entries:
                 if query in entry['search_text']:
                     found_count += 1
                     # Limit results to avoid clutter with short queries
-                    if found_count > 20:
+                    if found_count > limit:
                         break
                     
                     icon = 'NODE' if entry['is_main'] else 'DOT'
@@ -224,6 +231,8 @@ class SEARCHTABS_PT_popover(bpy.types.Panel):
             
             if found_count == 0:
                 col.label(text="No results")
+        elif len(query) == 1:
+            col.label(text="Type at least 2 characters...")
         else:
             col.label(text="Type to search...")
             # Show only main categories when empty
@@ -237,11 +246,28 @@ def draw_header_icon(self, context):
     layout = self.layout
     layout.popover(panel="SEARCHTABS_PT_popover", text="", icon='VIEWZOOM')
 
+# Addon Preferences
+class SEARCHTABS_AddonPreferences(bpy.types.AddonPreferences):
+    bl_idname = __name__
+
+    max_search_results: bpy.props.IntProperty(
+        name="Max Search Results",
+        description="Maximum number of displayed/found items",
+        default=25,
+        min=1,
+        max=500
+    )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "max_search_results")
+
 # Registration
 classes = (
     SEARCHTABS_PG_properties,
     SEARCHTABS_OT_switch_tab,
     SEARCHTABS_PT_popover,
+    SEARCHTABS_AddonPreferences,
 )
 
 def register():
