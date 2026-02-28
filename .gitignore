@@ -1,9 +1,20 @@
 # Documentation files (internal notes)
-CONTEXT_FILTERING_FIX.md
-AI_AGENT_GUIDE.md
+# These are now covered by the # Agent-specific section below, but keeping the comment for context.
 
-# Build artifacts
+# Blender artifacts
+__pycache__/
+*.blend
+*.blend1
 *.zip
+quit.blend
+
+# Agent-specific
+.agents/
+.agent/
+AGENT_TASK_BOARD.md
+AI_AGENT_GUIDE.md
+CONTEXT_FILTERING_FIX.md
+launch_blender_test.py
 
 # Icons
 sidebar-tab-search_ico_256px.png
