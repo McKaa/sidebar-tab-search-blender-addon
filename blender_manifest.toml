@@ -21,3 +21,6 @@ tags = ["3D View", "User Interface"]
 
 # Optional: Link to source (Useful, but can be removed if you want total minimalism)
 website = "https://github.com/McKaa/sidebar-tab-search-blender-addon"
+
+[permissions]
+files = "Access is required for storing custom aliases and favorites locally, as well as for the Export/Import and 'Open in Explorer' features."
