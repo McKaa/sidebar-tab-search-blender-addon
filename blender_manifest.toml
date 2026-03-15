@@ -5,7 +5,7 @@ id = "sidebar_tab_search"
 version = "2.0.0"
 name = "Sidebar Tab Search"
 tagline = "Quick search and switch between Sidebar (N-Panel) tabs"
-maintainer = "McKaa (Powered by Antigravity)"
+maintainer = "McKaa"
 type = "add-on"
 
 # Minimum Blender version
