@@ -23,4 +23,7 @@ tags = ["3D View", "User Interface"]
 website = "https://github.com/McKaa/sidebar-tab-search-blender-addon"
 
 [permissions]
-files = "Access is required for storing custom aliases and favorites locally, as well as for the Export/Import and 'Open in Explorer' features."
+files = """
+Access is required for storing custom aliases and favorites locally, and for the Export/Import and Open in Explorer features.
+"""
+
