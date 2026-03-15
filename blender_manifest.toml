@@ -23,4 +23,4 @@ tags = ["3D View", "User Interface"]
 website = "https://github.com/McKaa/sidebar-tab-search-blender-addon"
 
 [permissions]
-files = "Required for local settings and Export/Import features."
+files = "Required for local settings and Export/Import features"
