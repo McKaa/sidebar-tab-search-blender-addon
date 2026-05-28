@@ -4,7 +4,7 @@
 bl_info = {
     "name": "Sidebar Tab Search",
     "author": "McKaa",
-    "version": (2, 0, 0),
+    "version": (2, 0, 1),
     "blender": (4, 2, 0),
     "location": "View3D > Header",
     "description": "Quick search sidebar tabs with favorites and history.",
@@ -177,6 +177,9 @@ def get_all_tabs(context, force_refresh=False):
     if not force_refresh and _TABS_CACHE and (now - _TABS_LAST_REFRESH < CACHE_LIFETIME):
         return _TABS_CACHE
 
+    prefs = context.preferences.addons.get(ADDON_ID)
+    safe_mode = prefs.preferences.safe_mode if prefs and hasattr(prefs.preferences, 'safe_mode') else False
+
     entries = []
     seen = set()
 
@@ -190,7 +193,7 @@ def get_all_tabs(context, force_refresh=False):
             if not cat or cat == "Search":
                 continue
 
-            if hasattr(p, 'poll'):
+            if not safe_mode and hasattr(p, 'poll'):
                 try:
                     if not p.poll(context):
                         continue
@@ -780,6 +783,11 @@ class SEARCHTABS_AddonPreferences(bpy.types.AddonPreferences):
     show_header_popover: bpy.props.BoolProperty(
         name="Show Popover Icon", default=True,
     )
+    safe_mode: bpy.props.BoolProperty(
+        name="Safe Mode (Disable Context Polling)",
+        description="Check this if the addon crashes Blender on first use. Disables poll checks so all panels are always visible in search",
+        default=False,
+    )
 
     def draw(self, context):
         layout = self.layout
@@ -802,30 +810,30 @@ class SEARCHTABS_AddonPreferences(bpy.types.AddonPreferences):
         box.label(text="Keyboard Shortcuts", icon='KEYINGSET')
         col = box.column()
         wm = context.window_manager
-        seen_ids = set()
-        for kc in wm.keyconfigs:
+        kc = wm.keyconfigs.user
+        if kc:
             km = kc.keymaps.get('3D View')
-            if not km:
-                continue
-            for kmi in km.keymap_items:
-                if kmi.idname in {"searchtabs.search_popup", "searchtabs.call_popover"}:
-                    if kmi.idname in seen_ids:
-                        continue
-                    seen_ids.add(kmi.idname)
-                    row = col.row(align=True)
-                    if kmi.idname == "searchtabs.search_popup":
-                        row.label(text="Popup (F3)")
-                    else:
-                        row.label(text="Popover Menu")
-                    row.prop(kmi, "type", text="", full_event=True)
-                    op = row.operator(
-                        "searchtabs.reset_keymap", text="", icon='X',
-                    )
-                    op.idname = kmi.idname
-                    if kmi.idname == "searchtabs.search_popup":
-                        row.prop(self, "show_header_popup", text="")
-                    else:
-                        row.prop(self, "show_header_popover", text="")
+            if km:
+                seen_ids = set()
+                for kmi in km.keymap_items:
+                    if kmi.idname in {"searchtabs.search_popup", "searchtabs.call_popover"}:
+                        if kmi.idname in seen_ids:
+                            continue
+                        seen_ids.add(kmi.idname)
+                        row = col.row(align=True)
+                        if kmi.idname == "searchtabs.search_popup":
+                            row.label(text="Popup (F3)")
+                        else:
+                            row.label(text="Popover Menu")
+                        row.prop(kmi, "type", text="", full_event=True)
+                        op = row.operator(
+                            "searchtabs.reset_keymap", text="", icon='X',
+                        )
+                        op.idname = kmi.idname
+                        if kmi.idname == "searchtabs.search_popup":
+                            row.prop(self, "show_header_popup", text="")
+                        else:
+                            row.prop(self, "show_header_popover", text="")
 
         # Favorites Backup
         box = layout.box()
@@ -833,6 +841,12 @@ class SEARCHTABS_AddonPreferences(bpy.types.AddonPreferences):
         row = box.row(align=True)
         row.operator("searchtabs.export_favorites", icon='EXPORT')
         row.operator("searchtabs.import_favorites", icon='IMPORT')
+
+        # Troubleshooting
+        box = layout.box()
+        box.label(text="Troubleshooting", icon='ERROR')
+        col = box.column()
+        col.prop(self, "safe_mode")
 
 
 class SEARCHTABS_OT_reset_keymap(bpy.types.Operator):
@@ -846,14 +860,14 @@ class SEARCHTABS_OT_reset_keymap(bpy.types.Operator):
 
     def execute(self, context):
         wm = context.window_manager
-        for kc in wm.keyconfigs:
+        kc = wm.keyconfigs.user
+        if kc:
             km = kc.keymaps.get('3D View')
-            if not km:
-                continue
-            for kmi in km.keymap_items:
-                if kmi.idname == self.idname:
-                    kmi.type = 'NONE'
-                    return {'FINISHED'}
+            if km:
+                for kmi in km.keymap_items:
+                    if kmi.idname == self.idname:
+                        kmi.type = 'NONE'
+                        return {'FINISHED'}
         return {'CANCELLED'}
 
 
@@ -946,12 +960,15 @@ class SEARCHTABS_OT_open_addon_folder(bpy.types.Operator):
 
             path = os.path.normpath(os.path.dirname(mod.__file__))
 
-            if sys.platform == 'win32':
-                subprocess.Popen(['explorer', path])
-            elif sys.platform == 'darwin':
-                subprocess.Popen(['open', path])
+            if hasattr(bpy.ops.wm, "path_open"):
+                bpy.ops.wm.path_open(filepath=path)
             else:
-                subprocess.Popen(['xdg-open', path])
+                if sys.platform == 'win32':
+                    os.startfile(path)
+                elif sys.platform == 'darwin':
+                    subprocess.Popen(['open', path])
+                else:
+                    subprocess.Popen(['xdg-open', path])
         except Exception as e:
             print(f"Sidebar Tab Search: Could not open folder: {e}")
             return {'CANCELLED'}

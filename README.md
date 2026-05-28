@@ -51,6 +51,11 @@ This add-on features two distinct search engines tailored to different needs:
 - **Blender 4.2+ - 5.0+** (Fully compatible with legacy and Extension-based installations).
 - Universal support for search and tab switching across all versions.
 
+## Safe Mode (Disable Context Polling)
+
+When enabled, the add‑on disables context polling, preventing it from reacting to UI changes that could cause lag in large scenes. This mode is useful for users who prefer maximum performance and are comfortable managing context manually.
+
+
 > [!IMPORTANT]
 > **Blender 5.0+ Note**: Starting with version 5.0, Blender changed the default behavior of menus and popovers—they no longer close automatically when the mouse leaves.
 > To restore the classic behavior (auto-closing on mouse leave), go to **Edit > Preferences > Interface > Menus** and enable **"Close Menus on Leave"**.
