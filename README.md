@@ -2,7 +2,7 @@
 
 Quickly search and switch between Sidebar (N-Panel) tabs in Blender's 3D Viewport.
 
-![Screenshot](sidebar_tab_search-2.0.jpg)
+![Screenshot](sidebar_tab_search-2.0.2.jpg)
 
 ## Why Two Search Modes? (Popup vs Popover)
 
