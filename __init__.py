@@ -4,7 +4,7 @@
 bl_info = {
     "name": "Sidebar Tab Search",
     "author": "McKaa",
-    "version": (2, 0, 1),
+    "version": (2, 0, 2),
     "blender": (4, 2, 0),
     "location": "View3D > Header",
     "description": "Quick search sidebar tabs with favorites and history.",
@@ -31,6 +31,7 @@ STORAGE_FILE = "sidebar_tab_search_settings.json"
 MAX_HISTORY_SIZE = 50
 MAX_SEARCH_RESULTS = 120
 CACHE_LIFETIME = 2.0  # seconds
+SAFE_MODE_CACHE_LIFETIME = 30.0  # seconds (pancerny interwał dla Safe Mode)
 
 # --- GLOBAL STATE ---
 
@@ -38,6 +39,8 @@ _UNREGISTERING = False
 _STORAGE_CACHE = {"favorites": [], "install_dates": {}, "history": [], "aliases": {}}
 _TABS_CACHE = []
 _TABS_LAST_REFRESH = 0.0
+_ENUM_CACHE = []
+_ENUM_LAST_REFRESH = 0.0
 _REFRESH_TIMER = None
 
 
@@ -174,11 +177,14 @@ def get_all_tabs(context, force_refresh=False):
         return []
 
     now = time.time()
-    if not force_refresh and _TABS_CACHE and (now - _TABS_LAST_REFRESH < CACHE_LIFETIME):
-        return _TABS_CACHE
-
     prefs = context.preferences.addons.get(ADDON_ID)
     safe_mode = prefs.preferences.safe_mode if prefs and hasattr(prefs.preferences, 'safe_mode') else False
+    is_first_run = not bool(_TABS_CACHE)
+
+    current_cache_lifetime = SAFE_MODE_CACHE_LIFETIME if safe_mode else CACHE_LIFETIME
+
+    if not force_refresh and _TABS_CACHE and (now - _TABS_LAST_REFRESH < current_cache_lifetime):
+        return _TABS_CACHE
 
     entries = []
     seen = set()
@@ -193,7 +199,7 @@ def get_all_tabs(context, force_refresh=False):
             if not cat or cat == "Search":
                 continue
 
-            if not safe_mode and hasattr(p, 'poll'):
+            if not safe_mode and not is_first_run and hasattr(p, 'poll'):
                 try:
                     if not p.poll(context):
                         continue
@@ -680,27 +686,45 @@ class SEARCHTABS_OT_search_popup(bpy.types.Operator):
     bl_property = "search_enum"
 
     def build_enum(self, context):
+        global _ENUM_CACHE, _ENUM_LAST_REFRESH
         if _UNREGISTERING:
             return [("", "Shutting down...", "", 'ERROR', 0)]
-        items = []
-        for entry in sort_entries(get_all_tabs(context), context):
-            uid = (
-                f"{entry['cat']}|{entry['display']}"
-                f"|{entry.get('idname', '')}|{entry.get('label', '')}"
-                f"|NODE|{1 if entry['type'] == 'TAB' else 0}"
-            )
-            if entry['is_main']:
-                item_label = entry['display']
-            else:
-                item_label = f"{entry.get('label', '')}  >  {entry['cat']}"
-            items.append((
-                uid,
-                item_label,
-                "",
-                'NODE' if entry['is_main'] else 'DOT',
-                len(items),
-            ))
-        return items if items else [("", "No Tags", "", 'ERROR', 0)]
+            
+        try:
+            prefs = context.preferences.addons.get(ADDON_ID)
+            safe_mode = prefs.preferences.safe_mode if prefs and hasattr(prefs.preferences, 'safe_mode') else False
+            current_cache_lifetime = SAFE_MODE_CACHE_LIFETIME if safe_mode else CACHE_LIFETIME
+                
+            now = time.time()
+            if _ENUM_CACHE and (now - _ENUM_LAST_REFRESH < current_cache_lifetime):
+                return _ENUM_CACHE
+
+            items = []
+            for entry in sort_entries(get_all_tabs(context), context):
+                uid = (
+                    f"{entry.get('cat', '')}|{entry.get('display', '')}"
+                    f"|{entry.get('idname', '')}|{entry.get('label', '')}"
+                    f"|NODE|{1 if entry.get('type') == 'TAB' else 0}"
+                )
+                if entry.get('is_main'):
+                    item_label = str(entry.get('display', ''))
+                else:
+                    item_label = f"{entry.get('label', '')}  >  {entry.get('cat', '')}"
+                items.append((
+                    uid,
+                    item_label,
+                    "",
+                    'NODE' if entry.get('is_main') else 'DOT',
+                    len(items),
+                ))
+                
+            _ENUM_CACHE = items if items else [("", "No Tags", "", 'ERROR', 0)]
+            _ENUM_LAST_REFRESH = now
+            return _ENUM_CACHE
+            
+        except Exception as e:
+            print(f"Sidebar Tab Search: Enum error: {e}")
+            return [("", "Error loading tabs", "", 'ERROR', 0)]
 
     search_enum: bpy.props.EnumProperty(name="Tab", items=build_enum)
 
